@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AuthService } from '../services/auth.service.js';
-import prisma from '../config/database.js';
+import { AuthService } from '../src/services/auth.service.js';
+import prisma from '../src/config/database.js';
 import argon2 from 'argon2';
 
-vi.mock('../config/database.js', () => ({
+vi.mock('../src/config/database.js', () => ({
   default: {
     user: {
       findUnique: vi.fn(),

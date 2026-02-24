@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { ArticleController } from '../controllers/article.controller.js';
-import prisma from '../config/database.js';
-import { authenticate, optionalAuthenticate, authorize } from '../middlewares/auth.js';
-import { errorHandler } from '../middlewares/error.js';
+import { ArticleController } from '../src/controllers/article.controller.js';
+import prisma from '../src/config/database.js';
+import { authenticate, optionalAuthenticate, authorize } from '../src/middlewares/auth.js';
+import { errorHandler } from '../src/middlewares/error.js';
 
 // Setup Mock Express App for testing routes
 const app = express();
@@ -26,7 +26,7 @@ app.get('/author/dashboard', mockAuth, ArticleController.getDashboard);
 
 app.use(errorHandler);
 
-vi.mock('../config/database.js', () => ({
+vi.mock('../src/config/database.js', () => ({
     default: {
         article: {
             findUnique: vi.fn(),
@@ -48,7 +48,7 @@ vi.mock('../config/database.js', () => ({
     },
 }));
 
-vi.mock('../config/queue.js', () => ({
+vi.mock('../src/config/queue.js', () => ({
     readLogQueue: { add: vi.fn().mockResolvedValue({}) },
     analyticsQueue: { add: vi.fn().mockResolvedValue({}) }
 }));
@@ -135,8 +135,8 @@ describe('HTTP Endpoints - Articles', () => {
     });
 });
 
-import { AuthService } from '../services/auth.service.js';
-import { AuthController } from '../controllers/auth.controller.js';
+import { AuthService } from '../src/services/auth.service.js';
+import { AuthController } from '../src/controllers/auth.controller.js';
 
 const authApp = express();
 authApp.use(express.json());
