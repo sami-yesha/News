@@ -40,7 +40,11 @@ vi.mock('../config/database.js', () => ({
         },
         dailyAnalytics: {
             findMany: vi.fn(),
-        }
+        },
+        user: {
+            findUnique: vi.fn(),
+            create: vi.fn(),
+        },
     },
 }));
 

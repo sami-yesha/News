@@ -19,6 +19,14 @@ A production-ready RESTful API for authors to manage content and readers to cons
 - **Analytics Engine**: Asynchronous processing of engagement logs to avoid blocking content delivery.
 - **Dashboard**: Aggregated performance metrics for authors.
 
+## Project Structure
+
+The project files are located in the `backend/` directory. All commands below should be executed from within that folder.
+
+```bash
+cd backend
+```
+
 ## Getting Started
 
 ### Prerequisites
