@@ -198,11 +198,15 @@ Push database schema:
 npx prisma db push
 ```
 
-Run app:
-
-```
-npm run dev
-```
+4. **Start App**:
+   ```bash
+   npm run dev
+   ```
+5. **Start Queue Worker (Required for Analytics)**:
+   In a separate terminal:
+   ```bash
+   npm run worker
+   ```
 
 ---
 

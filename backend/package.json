@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "db:push": "prisma db push --accept-data-loss",
+    "worker": "nodemon --exec tsx src/config/queue.ts",
     "test": "vitest run"
   },
   "keywords": [],
