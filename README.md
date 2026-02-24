@@ -13,15 +13,16 @@ A production-ready RESTful API for authors to manage content and readers to cons
 
 ## Features
 
-- **RBAC**: strictly validated roles (Author, Reader).
-- **Secure Auth**: Complex password requirements and salted hashing.
-- **Article Lifecycle**: Drafts, Published status, and Soft Deletion.
-- **Analytics Engine**: Asynchronous processing of engagement logs to avoid blocking content delivery.
-- **Dashboard**: Aggregated performance metrics for authors.
+- **RBAC**: Strictly validated roles (Author, Reader).
+- **Secure Auth**: Salted hashing with Argon2 and hardened complex password requirements.
+- **Article Lifecycle**: Drafts, Published status, and **Global Soft-Delete Protection** (implemented via Prisma extensions).
+- **Analytics Engine**: Asynchronous processing of engagement logs using BullMQ.
+- **Author Dashboard**: Optimized performance using database-level `groupBy` aggregation.
+- **Anti-Abuse**: Redis-based rate limiting to prevent engagement log spam.
 
 ## Project Structure
 
-The project files are located in the `backend/` directory. All commands below should be executed from within that folder.
+The project files are located in the `backend/` directory. The server features a **Fail-Fast Environment Validation** layer that ensures all required configurations are present on startup.
 
 ```bash
 cd backend
@@ -33,7 +34,7 @@ cd backend
 
 - Node.js (v18+)
 - PostgreSQL Database
-- Redis (for BullMQ)
+- Redis (for BullMQ and Rate Limiting)
 
 ### Running the Project
 
@@ -76,33 +77,27 @@ If you see `Can't reach database server at localhost:5432`:
 
 ## Environment Variables
 
-| Variable | Description |
-| --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_SECRET` | Secret key for JWT signing |
-| `REDIS_URL` | Redis connection string (e.g., redis://localhost:6379) |
-| `PORT` | Server port (default: 3000) |
+| Variable | Description | Requirement |
+| --- | --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+| `JWT_SECRET` | Secret key for JWT signing | Required (Min 32 chars) |
+| `REDIS_URL` | Redis connection (e.g., redis://localhost:6379) | Required |
+| `PORT` | Server port (default: 3000) | Optional |
 
-## Bonus: Refresh Prevention Strategy
+## Implemented Strategy: Refresh Prevention
 
 **Question**: How would you prevent the same user from refreshing the page and generating 100 ReadLog entries in 10 seconds?
 
-**Proposed Solutions**:
+**Implementation**:
+The project implements a **Redis-based Sliding Window Marker** strategy:
+1. When a user requests an article, a middleware checks for a unique key in Redis: `rate_limit:engagement:{userId/IP}:{articleId}`.
+2. If the key exists, the request proceeds, but a `skipLogging` flag is attached to avoid duplicate analytics logging.
+3. If the key doesn't exist, it is set with a 60-second expiration (TTL) and the read is logged via the queue.
+4. This ensures engagement data remains accurate and the queue/database are protected from spam.
 
-1. **Redis Cache-aside Marker**:
-   - For every article view, check if a key `read:{userId}:{articleId}` exists in Redis.
-   - If it exists, skip logging. If not, log the read and set the key with a TTL (e.g., 5 minutes).
-   - For guests, use `read:{IP}:{articleId}`.
+## Design Highlights
 
-2. **Rate Limiting Middleware**:
-   - Use `express-rate-limit` to restrict calls to `GET /articles/:id` from the same user/IP.
-
-3. **Debounced Job Queue**:
-   - Before adding a job to BullMQ, check if a similar job is already pending for the same user-article pair in a short time frame.
-
-## Design Choices
-
-- **ESM (ECMAScript Modules)**: Used for modern JavaScript features and better tree-shaking support.
+- **Prisma Client Extensions**: Used to enforce global filters for soft-deleted articles across the entire application without manual developer intervention.
+- **Database Aggregation**: Author views are aggregated using SQL-native `groupBy` rather than in-memory processing, ensuring scalability as article counts grow.
 - **Argon2**: Chosen over BCrypt as per modern security recommendations for better resistance against GPU-based attacks.
-- **Prisma**: Provides type-safe database queries and easy-to-read schema definitions.
-- **BullMQ**: Ensures high-frequency read logs don't affect the responsiveness of the article detail view.
+- **BullMQ**: Ensures high-frequency read logs don't affect the responsiveness of the content delivery layer.
