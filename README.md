@@ -52,6 +52,14 @@ Run only the services (Postgres, Redis) in Docker, and run the App locally.
    npm run dev
    ```
 
+## Running Tests
+
+The project includes unit tests for all HTTP endpoints and core authentication logic using **Vitest** and **Supertest** with a fully mocked Prisma client. No database or Redis connection is required to run tests.
+
+```bash
+npm test
+```
+
 ## Troubleshooting Connectivity
 If you see `Can't reach database server at localhost:5432`:
 1. Ensure the Docker containers are running: `docker ps`.
