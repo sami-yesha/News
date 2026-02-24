@@ -31,7 +31,8 @@ export class ArticleController {
   static async getArticleDetail(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const readerId = req.user?.id; // Optional readerId
-      const article = await ArticleService.getArticleById(req.params.id as string, readerId);
+      const skipLogging = (req as any).skipLogging || false;
+      const article = await ArticleService.getArticleById(req.params.id as string, readerId, skipLogging);
       res.status(200).json(ResponseHelper.success('Article retrieved successfully', article));
     } catch (error) {
       next(error);

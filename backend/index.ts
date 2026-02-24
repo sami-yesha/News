@@ -1,6 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
+import { env } from './src/config/env.js';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -13,7 +11,7 @@ import authorRoutes from './src/routes/author.routes.js';
 import './src/config/queue.js';
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = env.PORT;
 
 // Middlewares
 app.use(helmet());

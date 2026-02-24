@@ -120,7 +120,7 @@ export class ArticleService {
     return { articles, total, pageNum, pageSize };
   }
 
-  static async getArticleById(articleId: string, readerId?: string) {
+  static async getArticleById(articleId: string, readerId?: string, skipLogging: boolean = false) {
     const article = await prisma.article.findUnique({
       where: { id: articleId },
       include: { author: { select: { id: true, name: true } } },
@@ -131,7 +131,9 @@ export class ArticleService {
     }
 
     // Engagement Trigger: Fire and forget via queue
-    readLogQueue.add('log-read', { articleId, readerId }).catch(err => console.error('Failed to log read:', err));
+    if (!skipLogging) {
+      readLogQueue.add('log-read', { articleId, readerId }).catch(err => console.error('Failed to log read:', err));
+    }
 
     return article;
   }
@@ -156,20 +158,30 @@ export class ArticleService {
           id: true,
           title: true,
           createdAt: true,
-          analytics: {
-            select: {
-              viewCount: true,
-            },
-          },
         },
       }),
       prisma.article.count({ where }),
     ]);
 
+    const articleIds = articles.map(a => a.id);
+
+    // Optimized aggregation: Query the database for sums once
+    const viewCounts = await prisma.dailyAnalytics.groupBy({
+      by: ['articleId'],
+      where: {
+        articleId: { in: articleIds },
+      },
+      _sum: {
+        viewCount: true,
+      },
+    });
+
+    const viewCountMap = new Map(viewCounts.map(vc => [vc.articleId, vc._sum.viewCount || 0]));
+
     const dashboardData = articles.map((article: any) => ({
       title: article.title,
       createdAt: article.createdAt,
-      totalViews: article.analytics.reduce((sum: number, record: any) => sum + record.viewCount, 0),
+      totalViews: viewCountMap.get(article.id) || 0,
     }));
 
     return { data: dashboardData, total, pageNum, pageSize };

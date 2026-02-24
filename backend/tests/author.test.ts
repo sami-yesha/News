@@ -8,6 +8,9 @@ vi.mock('../src/config/database.js', () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
+    dailyAnalytics: {
+      groupBy: vi.fn(),
+    },
   },
 }));
 
@@ -36,13 +39,15 @@ describe('Author Dashboard Logic', () => {
 
     (prisma.article.findMany as any).mockResolvedValue(mockArticles);
     (prisma.article.count as any).mockResolvedValue(2);
+    (prisma.dailyAnalytics.groupBy as any).mockResolvedValue([
+      { articleId: '1', _sum: { viewCount: 35 } },
+      { articleId: '2', _sum: { viewCount: 5 } },
+    ]);
 
     const result = await ArticleService.getAuthorDashboard(authorId, { page: 1, size: 10 });
 
     expect(result.data).toHaveLength(2);
-    // Article 1: 10 + 25 = 35
     expect(result.data[0].totalViews).toBe(35);
-    // Article 2: 5
     expect(result.data[1].totalViews).toBe(5);
   });
 
@@ -59,6 +64,7 @@ describe('Author Dashboard Logic', () => {
 
     (prisma.article.findMany as any).mockResolvedValue(mockArticles);
     (prisma.article.count as any).mockResolvedValue(1);
+    (prisma.dailyAnalytics.groupBy as any).mockResolvedValue([]);
 
     const result = await ArticleService.getAuthorDashboard(authorId, { page: 1, size: 10 });
 

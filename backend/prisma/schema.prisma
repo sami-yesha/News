@@ -42,6 +42,9 @@ model Article {
   readLogs  ReadLog[]
   analytics DailyAnalytics[]
 
+  @@index([status, deletedAt])
+  @@index([category])
+  @@index([authorId])
   @@map("articles")
 }
 
@@ -53,6 +56,7 @@ model ReadLog {
   reader    User?    @relation(fields: [readerId], references: [id])
   readAt    DateTime @default(now())
 
+  @@index([articleId, readAt])
   @@map("read_logs")
 }
 
@@ -64,5 +68,6 @@ model DailyAnalytics {
   date       DateTime @db.Date
 
   @@unique([articleId, date])
+  @@index([date])
   @@map("daily_analytics")
 }

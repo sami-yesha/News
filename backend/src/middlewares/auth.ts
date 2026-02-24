@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
 import { AppError } from './error.js';
 import { ResponseHelper } from '../utils/response.js';
 
@@ -8,6 +9,11 @@ export interface AuthRequest extends Request {
     id: string;
     role: 'author' | 'reader';
   };
+}
+
+interface JWTPayload {
+  sub: string;
+  role: 'author' | 'reader';
 }
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -19,7 +25,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+    const decoded = jwt.verify(token, env.JWT_SECRET) as unknown as JWTPayload;
     req.user = {
       id: decoded.sub,
       role: decoded.role,
@@ -39,7 +45,7 @@ export const optionalAuthenticate = (req: AuthRequest, res: Response, next: Next
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+    const decoded = jwt.verify(token, env.JWT_SECRET) as unknown as JWTPayload;
     req.user = {
       id: decoded.sub,
       role: decoded.role,

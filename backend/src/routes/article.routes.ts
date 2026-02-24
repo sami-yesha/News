@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { ArticleController } from '../controllers/article.controller.js';
 import { authenticate, authorize, optionalAuthenticate } from '../middlewares/auth.js';
+import { engagementRateLimit } from '../middlewares/rateLimit.js';
 
 const router = Router();
 
 // Public routes
 router.get('/', optionalAuthenticate, ArticleController.getPublicFeed);
-router.get('/:id', optionalAuthenticate, ArticleController.getArticleDetail);
+router.get('/:id', optionalAuthenticate, engagementRateLimit, ArticleController.getArticleDetail);
 
 // Author only routes
 router.use(authenticate);

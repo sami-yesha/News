@@ -40,6 +40,7 @@ vi.mock('../src/config/database.js', () => ({
         },
         dailyAnalytics: {
             findMany: vi.fn(),
+            groupBy: vi.fn(),
         },
         user: {
             findUnique: vi.fn(),
@@ -103,15 +104,21 @@ describe('HTTP Endpoints - Articles', () => {
     });
 
     it('GET /author/dashboard should return dashboard statistics', async () => {
+        const articleId = 'art-1';
         (prisma.article.findMany as any).mockResolvedValue([
-            { title: 'Art 1', createdAt: new Date(), analytics: [{ viewCount: 10 }] }
+            { id: articleId, title: 'Art 1', createdAt: new Date() }
         ]);
         (prisma.article.count as any).mockResolvedValue(1);
+
+        // Mock the new groupBy call
+        (prisma.dailyAnalytics.groupBy as any).mockResolvedValue([
+            { articleId, _sum: { viewCount: 15 } }
+        ]);
 
         const res = await request(app).get('/author/dashboard');
 
         expect(res.status).toBe(200);
-        expect(res.body.Object[0]).toHaveProperty('totalViews', 10);
+        expect(res.body.Object[0]).toHaveProperty('totalViews', 15);
     });
 
     it('PUT /articles/:id should update an article', async () => {
