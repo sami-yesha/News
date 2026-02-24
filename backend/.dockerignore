@@ -1,0 +1,5 @@
+node_modules
+dist
+.env
+prisma_error.txt
+prisma_error_utf8.txt
