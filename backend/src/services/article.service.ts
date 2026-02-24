@@ -101,10 +101,7 @@ export class ArticleService {
     }
 
     if (q) {
-      where.OR = [
-        { title: { contains: q, mode: 'insensitive' } },
-        { content: { contains: q, mode: 'insensitive' } },
-      ];
+      where.title = { contains: q, mode: 'insensitive' };
     }
 
     const [articles, total] = await Promise.all([
